@@ -1,0 +1,54 @@
+---
+title: "Semester Project: Data Writeup Assignment"
+author: "Ari Takvorian (abt734)"
+date: 
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Research question
+
+Has either party benefited significantly from 2010 redistricting? Has one party benefited more than the other from the 2010  redistricting?
+
+### Describe the data you obtained
+
+I collected this data on my own, using each state's published election data from 2012, 2014, 2016, and 2018. For the 35 states where redistricting is controlled by the state legislature, I first found out which party had control after the 2010 elections (PtyControlAfter2010). Then for each state, I looked at their US House of Representatives election results from each election after 2010. I noted how many seats were available (SeatsAvail_XXXX), how many seats the redistricting party won (SeatsWonByParty_XXXX), and what percent of the overall vote for House seats that party received (PctTotalVote_XXXX). I then calculated what percentage of total seats was won by the redistricting party (PctSeatsWon_XXXX), and compared that to the expected seats won using the overall vote share received (SeatsExpected_XXXX). This allowed me to find the seat and percentage gain/loss the redistricting party received (SeatGain_XXXX, PctGain_XXXX), assuming that House seats are supposed to be allocated based on the make-up of the state.
+
+For example, if a state has 4 seats up for grabs, and the population is split 50%-50% for each party, each party should receive 2 seats. What we see is, in Texas 2018, for example, where 36 seats were available, the Republican party won 23 seats (63.89%), while they only won 50.40% of the total vote for House seats. Therefore, they "should" have received 18.14 seats, assuming that House seats accurately represent the state's population. While this discrepency should not be attributed entirely to gerrymandering/redistricting, the district drawings resulted in Republicans receiving 13% more of the seats than they "should" have.
+
+### Describe your key variables
+
+I won't need to recode anything, since all of my data (besides party - "D" or "R") is numeric. 
+
+The central variables in my data set are the PctSeatGain_XXXX, SeatGain_XXXX, and the PtyControlAfter2010. I've created averages for the first two (PctSeatGain_Avg, SeatGain_Avg), which averages the percentage and numeric seat gain for each state over the four elections. The independent variable in this scenario is PtyControlAfter2010, and the dependent variable(s) would be PctSeatGain_Avg and SeatGain_Avg. I'm going to want to test if there is a difference in PctSeatGain_Avg between parties, as well as if the overall PctSeatGain_Avg is statistically greater than zero.
+
+### Load your dataset into R
+
+```{r}
+library(rio)
+Data <- import("Data.xlsx")
+attach(Data)
+```
+
+### Present a basic table or figure of your data
+
+DELETE THIS PARAGRAPH BEFORE YOU TURN IN YOUR ASSIGNMENT: Here you should produce some sort of basic table or figure using your data. This ideally will be something using your variable(s) of interest and will be related to your research question. It definitely does not have to be a final analysis that includes everything you'll want to do. It's just meant as a start. For example, if your research question is about whether two variables x and y are related, you might want to make a simple scatterplot using something like `plot(y ~ x)`. For some questions, you might want to make a boxplot or a table. You might even need to recode a variable before analyzing it, for example if it has weird missing data codes like `-99` that might mess up your results if they were treated as numeric. You should first write some brief text (a few sentences at most) that describes what type of table or figure you will make. Then in the R chunk below write your code to produce the table or figure. Finally, write a couple more sentences below that to describe what you see in the table or figure produced (this doesn't have to be anything earth shattering, just a basic description).
+
+```{r}
+boxplot(SeatGainPct_Avg ~ PtyControlAfter2010)
+boxplot(SeatGain_Avg ~ PtyControlAfter2010)
+hist(SeatGainPct_Avg)
+```
+
+The first boxplot shows the average seat gain percentage by each party over the four elections. The boxplots look surprisingly similar, with means around 0.15, implying that, on average, each party gained 15% more seats than they "should" have. 
+
+The second boxplot shows the average seat gain by each party over the four elections (actual seats, not percent). When looking at the data this way, we see that the Republicans, on average, gained slightly more seats than the Democrats did, on average, with both averaging about a 1.0-1.5 seat gain.
+
+Lastly, the histogram shows us the frequency of each bucket of percentage seat gain. It's quite clear that the vast majority of states gained at least 10% more seats than they "should" have, with three states averaging gains upwards of 30%. 
+
+
