@@ -1,0 +1,126 @@
+---
+title: "Semester Project: Final Paper"
+author: "Ari Takvorian (abt734)"
+date: 
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rio)
+Data <- import("Data.xlsx")
+attach(Data)
+```
+
+### Introduction
+
+For this project, I was interested in redistricting and gerrymandering, and wanted to see if one party has benefited more than the other in the last 10 years. I thought it would be interesting to see if one party is using their redistricting power more than the other, and I was also curious to see which states are the largest sources of gerrymandering. My research can be boiled down to the following two questions:
+
+Has either party benefited significantly from 2010 redistricting? Has one party benefited more than the other from the 2010 redistricting?
+
+### Data Description
+
+I collected this data on my own, using each state’s published election data from 2012, 2014, 2016, and 2018. For the 35 states where redistricting is controlled by the state legislature, I first found out which party had control after the 2010 elections (PtyControlAfter2010). Then for each state, I looked at their US House of Representatives election results from each election after 2010. I noted how many seats were available (SeatsAvail), how many seats the redistricting party won (SeatsWonByParty_XXXX), and what percent of the overall vote for House seats that party received (PctTotalVote_XXXX). I then calculated what percentage of total seats was won by the redistricting party (PctSeatsWon_XXXX), and compared that to the expected seats won using the overall vote share received (SeatsExpected_XXXX). This allowed me to find the seat and percentage gain/loss the redistricting party received (SeatGain_XXXX, PctGain_XXXX), assuming that House seats are supposed to be allocated based on the make-up of the state.
+
+For example, if a state has 4 seats up for grabs, and the population is split 50%-50% for each party, each party should receive 2 seats. What we see is, in Texas 2018, for example, where 36 seats were available, the Republican party won 23 seats (63.89%), while they only won 50.40% of the total vote for House seats. Therefore, they “should” have received 18.14 seats, assuming that House seats accurately represent the state’s population. While this discrepency should not be attributed entirely to gerrymandering/redistricting, the district drawings resulted in Republicans receiving 13% more of the seats than they “should” have.
+
+There are, as mentioned previously, 35 states in which the state legislature's control redistricting (and not an independent commission or state with one seat), with four elections having taken place in the decade, meaning there are 140 election results to analyze. I won’t need to recode anything, since all of my data (besides party - “D” or “R”) is numeric.
+
+The central variables in my data set are the PctSeatGain_XXXX, SeatGain_XXXX, and the PtyControlAfter2010. I’ve created averages for the first two (PctSeatGain_Avg, SeatGain_Avg), which averages the percentage and numeric seat gain for each state over the four elections. The independent variable in this scenario is PtyControlAfter2010, and the dependent variable(s) would be PctSeatGain_Avg and SeatGain_Avg. I’m going to want to test if there is a difference in PctSeatGain_Avg between parties, as well as if the overall PctSeatGain_Avg is statistically greater than zero.
+
+### Descriptive Analyses
+
+Before getting into the main analyses of my research questions, I will show and discuss the basic characteristics of the data I collected. 
+
+```{r}
+barplot(table(PtyControlAfter2010), main="Counts of Party Control after 2010 Elections", ylim=c(0, 30), ylab="Number of States", xlab="Party", col=ifelse(PtyControlAfter2010 == "R", "blue", "red"))
+```
+
+The histogram above shows the number of states each party controlled redistricting for after 2010. As seen, there were substantially more states in which Republicans controlled the redistricting for the 2012-2020 elections. 
+
+```{r}
+State[1]
+PtyControlAfter2010[1]
+SeatsAvail[1]
+PctTotalVote_2012[1]
+SeatsWonByParty_2012[1]
+SeatsExpected_2012[1]
+SeatGain_2012[1]
+PctGain_2012[1]
+SeatGain_Avg[1]
+SeatGainPct_Avg[1]
+```
+
+The data above represents a sample row from the dataset. After 2010, the Alabama state legislature was controlled by the Republican Party. In Alabama, a state with seven US House of Representative seats, the 2012 US House elections  saw Republicans receiving 63.8% of the total votes in all districts, but winning six of the seven districts. Based on their share of the total vote, they "should have" received 4.466 votes, as that represents 63.8% of seven seats. However, their six-seat win results in a seat gain of 1.534 seats, which means that Republicans won 21.9% more seats than they "should have," assuming that redistricting results in elections that represent the state's political makeup. Furthermore, between all four Congressional elections in Alabama, the Republican party, on average, won 1.58 more seats than they "should have," resulting in a 22.60% gain.
+
+```{r}
+plot(SeatsAvail, SeatGainPct_Avg*100, col=ifelse(PtyControlAfter2010 == "D", "blue", "red"), ylab="Average Percent of Seats Gained", xlab="Seats Available", main="Average Percent of Seats Gained by State's Seats Available")
+```
+
+Bringing in all states, the plot above shows the average percentage gain by each state over all four elections. The x-axis indicates the number of US House seats available in that state, with Texas representing the largest in the sample (California uses an independent commission). There is no clear difference between the two parties (Democrats in blue, Republicans in red), but it is clear that the two parties in a vast majority of states see at least a 10% benefit in seats compared to their "expected" seats. 
+
+Also notable from the plot is that a lot of the spread can be attributed to states with less than five seats available. In situations like these, the controlling party might get 50% of the vote share, but both of the seats available in that state, resulting in a massive percentage gain (this is exactly the case with Rhode Island, which has two seats).
+
+Therefore, it might be more useful to see a similar plot, but instead of average percentage of seats gained, look at the average actual number of seats gained (below).
+
+```{r}
+plot(SeatsAvail, SeatGain_Avg, col=ifelse(PtyControlAfter2010 == "D", "blue", "red"), main="Average Seats Gained by State's Seats Available", xlab="Seats Available", ylab="Average Seats Gained")
+```
+
+The above plot has less spread, since the states with less than five seats available in total usually see about one or two seats gained by their controlling party. 
+
+Something interesting to note is that, on a plot like this, if the apportionment of seats between parties were to be exactly "correct", the data points would line up on a flat line around "0." However, there seems to be a slightly positive correlation, implying that states with more seats see larger gains by the controlling party in terms of number of seats. This correlation is not present in the prior plot, but, judging by how few of the data points are near "0," it's quite clear that the apportionment of seats to each party is not exactly (or very closely) in line with the political makeup of each state.
+
+```{r}
+boxplot(SeatGainPct_Avg*100 ~ PtyControlAfter2010, col=ifelse(PtyControlAfter2010 == "R", "blue", "red"))
+```
+
+Finally, the above boxplot shows exactly what I seek to test in the following section. Here, we see the percentage of seats gained by each party, on average, over all four elections. The boxplots have very similar medians, with each party, on average, and each party seems to be gaining about 15% more seats than they "should have," based on their party's vote share in each state.
+
+### Main Analyses
+
+```{r}
+mean(SeatGainPct_Avg[PtyControlAfter2010 == "D"])
+mean(SeatGainPct_Avg[PtyControlAfter2010 == "R"])
+
+mean(SeatGainPct_Avg[PtyControlAfter2010 == "D" | SeatsAvail >= 5])
+mean(SeatGainPct_Avg[PtyControlAfter2010 == "R" | SeatsAvail >= 5])
+```
+
+As seen above, the data shows that the Democratic party saw about an 11% gain in seats, while the Republican party saw a gain in seats closer over 14%. When controlling for small states, the Democrats average gain jumps to about 13.9%, and the Republican average jumps to 14.8%.
+
+In order to determine if the difference, while, slight, between percentage of seats gained by each party over all four elections, I will conduct a hypothesis test on the difference in percentage of seats gained. The null hypothesis of the following test is that the difference in percentage of seats gained by each party is zero, while the alternative would be that the difference is not zero.
+
+```{r}
+t.test(SeatGainPct_Avg ~ PtyControlAfter2010)
+```
+
+With a very high p-value (0.657), we fail to reject the null hypothesis that the "true" difference in seat gain is zero. The concept of "true" is a little nuanced, since we're dealing with the entire population of states, (discussed below), but, this result seems to suggest that, if a new state entered the US, we would not expect a statistically significant difference in seat gain percentage depending on which party gained control.
+
+This data might be skewed, however, as there are a lot of states with a very small number of seats available in total. It might be beneficial, therefore, to see if there is a difference between each party's seat percentage gain for slightly larger states only.
+
+```{r}
+t.test(SeatGainPct_Avg[SeatsAvail >= 5] ~ PtyControlAfter2010[SeatsAvail >= 5])
+```
+
+The above test gives us an even stronger p-value, meaning we cannot reject the null hypothesis of the difference in percentage of seats gained by each party being equal to zero for states with five or more seats available.
+
+Since it seems that there is no difference in benefit to each party, is there even a benefit at all? The following two tests are the same as the two above, but, instead of comparing the difference between each party's gain, these tests will determine if the true percentage of seats gained is equal to zero for both parties, with the first test looking at all states, and the second looking at states with five or more seats.
+
+```{r}
+t.test(SeatGainPct_Avg)
+t.test(SeatGainPct_Avg[SeatsAvail >= 5])
+```
+
+Both tests yield highly significant p-values, meaning we can reject the null hypothesis that the "true" percentage of seats gained by the controlling parties is equal to zero, for all states and just states with five or more seats. Thus, it's fair to conclude that both parties are benefiting from redistricting in US House elections in their states, as the true value of percentage of seats gained is greater than zero. The 95% CI implies that the mean between the parties' average percent seat gain is between 7.23% and 19.085%. 
+
+
+### Discussion
+
+While there doesn't seem to be a clear winner in the game of redistricting, both parties are clearly benefiting from redistricting (assuming that is the sole explanation for the data). Since this data represents the entire population, however, we can say that Republicans did benefit more from redistricting in the 2010s, as they gained, on average, 14.29% more seats than expected, while Democrats only gained 10.9%.
+
+What might be interesting to look at is whether the states with independent commissions are seeing smaller discrepancies between seat apportionment and vote share by party. Having this data will allow us to determine if states with legislatures controlling the process are performing "worse" than those with commissions in terms of "redistricting integrity."
+
+Furthermore, seeing how gerrymandering has changed over the decades would be interesting as well, so pulling the same data for the 2000s, and comparing that to the 2010s, and, in the future, the 2020s will allow us to see if state legislatures are using redistricting more and more to their advantage.
